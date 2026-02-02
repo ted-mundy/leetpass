@@ -11,12 +11,17 @@ import (
 	"github.com/ted-mundy/leetpass-api/internal/signing"
 )
 
-func TestSign(t *testing.T) {
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("Failed to generate RSA key: %v", err)
-	}
+var key *rsa.PrivateKey
 
+func init() {
+	var err error
+	key, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic("Failed to generate RSA key: " + err.Error())
+	}
+}
+
+func TestSign(t *testing.T) {
 	signer := &signing.Signer{
 		PrivateKey: key,
 		Lifetime:   1 * time.Hour,
