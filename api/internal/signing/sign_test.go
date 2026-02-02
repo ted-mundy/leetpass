@@ -2,6 +2,7 @@ package signing_test
 
 import (
 	"testing"
+	"time"
 
 	"crypto/rand"
 	"crypto/rsa"
@@ -18,6 +19,7 @@ func TestSign(t *testing.T) {
 
 	signer := &signing.Signer{
 		PrivateKey: key,
+		Lifetime:   1 * time.Hour,
 	}
 
 	data := "test-data"
@@ -50,5 +52,15 @@ func TestSign(t *testing.T) {
 
 	if string(claims["data"].(string)) != string(data) {
 		t.Fatalf("Expected data %s, got %s", data, claims["data"])
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		t.Fatalf("Failed to get exp from claims")
+	}
+
+	expTime := time.Unix(int64(exp), 0)
+	if time.Until(expTime) > signer.Lifetime || time.Until(expTime) < signer.Lifetime-time.Minute { // allow 1 minute of leeway
+		t.Fatalf("Expected exp to be within lifetime, got %v", time.Until(expTime))
 	}
 }
